@@ -39,7 +39,7 @@
 
 ## 工程目录结构
 
-```
+
 .
 ├── Dockerfile								用于打包Docker
 ├── README.md									本文档
@@ -61,5 +61,5 @@
 │   └── user.js
 ├── .env											环境配置，不应被git跟踪
 └── .env.example							环境配置示例
-```
+
 
