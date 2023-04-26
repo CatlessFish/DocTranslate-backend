@@ -6,8 +6,11 @@ mongoose.connect(MONGO_ADDRESS, {
     // useCreateIndex: true,
 });
 
+// export models here
 const models = {
     User: require('./user/user_model'),
+    Post: require('./post/post_model'),
+    WallEntry: require('./wall/wall_entry_model'),
 };
 
 module.exports = models;

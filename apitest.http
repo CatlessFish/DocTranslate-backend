@@ -1,0 +1,94 @@
+# Remember to use WSL address
+@url = http://localhost:3000
+@json = Content-Type: application/json
+
+###
+get {{url}}/api
+
+### List all users
+GET {{url}}/api/user/getAll
+
+
+### User Register
+POST {{url}}/api/user/register
+{{json}}
+
+{
+    "username":"user1234",
+    "password":"12345",
+    "email":"user1234@test.com"
+}
+
+### User Login
+POST {{url}}/api/user/login
+{{json}}
+
+{
+    "username":"user1234",
+    "password":"12345"
+}
+
+### User Profile
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0NDBhZGY0ZDNlODc0MWUxYzI3MzZmNCIsImlhdCI6MTY4MTk2MDQ1NH0.gvNhYTP5APpKvozkeyzWS1ov5ATdDTutKfAEu4fAFIo
+GET {{url}}/api/user/profile
+Authorization: Bearer {{token}}
+
+####################
+### Wall
+####################
+
+### Wall list
+GET {{url}}/api/wall/getAllEntries
+Authorization: Bearer {{token}}
+
+### New wall entry
+POST {{url}}/api/wall/createOneEntry
+Authorization: Bearer {{token}}
+{{json}}
+
+{
+    "content":{
+        "text":"New Post!"
+    }
+}
+
+### Delete wall entry
+POST {{url}}/api/wall/deleteOneEntry
+Authorization: Bearer {{token}}
+{{json}}
+
+{
+    "wallEntryId":""
+}
+
+### Get all post in one entry
+@wallEntryId = 644921c74edf5dd17475bbe3
+POST {{url}}/api/wall/getAllPostsInEntry
+Authorization: Bearer {{token}}
+{{json}}
+
+{
+    "wallEntryId":"{{wallEntryId}}"
+}
+
+### New post in one entry
+POST {{url}}/api/wall/addPostToEntry
+Authorization: Bearer {{token}}
+{{json}}
+
+{
+    "wallEntryId":"{{wallEntryId}}",
+    "content":{
+        "text":"Yo there"
+    }
+}
+
+### Delete post in one entry
+POST {{url}}/api/wall/deletePostFromEntry
+Authorization: Bearer {{token}}
+{{json}}
+
+{
+    "wallEntryId":"{{wallEntryId}}",
+    "postId":""
+}
