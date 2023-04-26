@@ -39,27 +39,5 @@
 
 ## 工程目录结构
 
-```
-.
-├── Dockerfile								用于打包Docker
-├── README.md									本文档
-├── app.js										应用配置
-├── bin
-│   └── www										用于启动应用的入口
-├── config.js									用于.env环境变量配置
-├── db												数据库模型相关
-│   ├── models.js
-│   └── user
-│       └── user_model.js
-├── middleware								中间件
-│   └── auth.js
-├── package-lock.json
-├── package.json
-├── routes										路由控制器
-│   ├── api.js
-│   ├── index.js
-│   └── user.js
-├── .env											环境配置，不应被git跟踪
-└── .env.example							环境配置示例
-```
+（懒得做了 意会一下吧）
 
