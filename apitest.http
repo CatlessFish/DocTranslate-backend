@@ -1,5 +1,6 @@
 # Remember to use WSL address
 @url = http://localhost:3000
+# @url = http://172.30.104.41:3000
 @json = Content-Type: application/json
 
 ###
@@ -58,7 +59,7 @@ Authorization: Bearer {{token}}
 {{json}}
 
 {
-    "wallEntryId":""
+    "wallEntryId":"123"
 }
 
 ### Get all post in one entry
@@ -84,7 +85,7 @@ Authorization: Bearer {{token}}
 }
 
 ### Delete post in one entry
-POST {{url}}/api/wall/deletePostFromEntry
+POST {{url}}/api/wall/deletePostInEntry
 Authorization: Bearer {{token}}
 {{json}}
 

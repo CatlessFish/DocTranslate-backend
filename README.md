@@ -8,7 +8,9 @@
 >
 > 前端App代码仓库：[CatlessFish/crispy-coconut (github.com)](https://github.com/CatlessFish/crispy-coconut)
 >
-> 满足测试API规范：[zyz9740/ApiDoc (github.com)](https://github.com/zyz9740/ApiDoc)
+> 验收测试API规范：[zyz9740/ApiDoc (github.com)](https://github.com/zyz9740/ApiDoc)
+>
+> 实际使用API文档：[CatlessFish/CocoApiDoc: API documentation for CrispyCoconut (github.com)](https://github.com/CatlessFish/CocoApiDoc)
 
 
 

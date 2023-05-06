@@ -16,6 +16,11 @@ const MsgBoxSchema = new mongoose.Schema({
     },
     description: {
         type: Object,
+        // 文字，背景图片，...
+    },
+    settings: {
+        type: Object,
+        // 是否允许提问，是否允许匿名，...
     },
     entries: [{
         type: mongoose.Schema.Types.ObjectId,

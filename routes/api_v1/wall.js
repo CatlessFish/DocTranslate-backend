@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
+const Response = require('../../utils/generalResponse');
 const WallEntryModel = require('../../db/models').WallEntry;
 const PostModel = require('../../db/models').Post;
 
@@ -18,13 +19,14 @@ const PostModel = require('../../db/models').Post;
 
 router.get('/getAllEntries', async function (req, res, next) {
     const wallEntries = await WallEntryModel.find();
-    res.send(wallEntries);
+    const response = Response.success(wallEntries);
+    res.send(response);
 });
 
 router.post('/createOneEntry', async function (req, res, next) {
     const postContent = req.body.content;
-    console.assert(postContent, 'postContent is required');
     const owner = req.user._id;
+    console.assert(postContent, 'postContent is required');
     console.assert(owner, 'owner is required');
 
     // Create a new post
@@ -49,19 +51,20 @@ router.post('/createOneEntry', async function (req, res, next) {
         id: newWallEntry._id,
     }
     await initialPost.save();
-    res.send(newWallEntry);
+    res.send(Response.success(newWallEntry));
 });
 
 router.post('/deleteOneEntry', async function (req, res, next) {
     const wallEntryId = req.body.wallEntryId;
     console.assert(wallEntryId, 'wallEntryId is required');
+
     try {
         await WallEntryModel.findByIdAndDelete(wallEntryId);
     } catch (error) {
-        res.status(400).send(error.message);
+        res.status(400).send(Response.error(400, error.message));
         return
     }
-    res.send('ok');
+    res.send(Response.success(null));
 });
 
 
@@ -86,15 +89,15 @@ router.post('/getAllPostsInEntry', async function (req, res, next) {
             $in: entry.posts,
         }
     });
-    res.send(posts);
+    res.send(Response.success(posts));
 });
 
 router.post('/addPostToEntry', async function (req, res, next) {
     const wallEntryId = req.body.wallEntryId;
-    console.assert(wallEntryId, 'wallEntryId is required');
     const postContent = req.body.content;
-    console.assert(postContent, 'postContent is required');
     const owner = req.user._id;
+    console.assert(wallEntryId, 'wallEntryId is required');
+    console.assert(postContent, 'postContent is required');
     console.assert(owner, 'owner is required');
 
     // Create a new post
@@ -116,26 +119,26 @@ router.post('/addPostToEntry', async function (req, res, next) {
     entry.updatedAt = Date.now();
     await entry.save();
 
-    res.send(newPost);
+    res.send(Response.success(newPost));
 });
 
-router.post('/deletePostFromEntry', async function (req, res, next) {
+router.post('/deletePostInEntry', async function (req, res, next) {
     const wallEntryId = req.body.wallEntryId;
-    console.assert(wallEntryId, 'wallEntryId is required');
     const postId = req.body.postId;
-    console.assert(postId, 'postId is required');
     const entry = await WallEntryModel.findById(wallEntryId);
+    console.assert(wallEntryId, 'wallEntryId is required');
+    console.assert(postId, 'postId is required');
     console.assert(entry, 'entry not found');
 
     // Cannot delete a post that is not in the entry
     if (!entry.posts.includes(postId)) {
-        res.status(400).send('Cannot delete a post that is not in the entry');
+        res.status(400).send(Response.error(400, 'Cannot delete a post that is not in the entry'));
         return;
     }
 
     // Cannot delete the initial post
     if (postId == entry.initialPost) {
-        res.status(400).send('Cannot delete the initial post');
+        res.status(400).send(Response.error(400, 'Cannot delete the initial post'));
         return;
     }
 
@@ -150,22 +153,22 @@ router.post('/deletePostFromEntry', async function (req, res, next) {
         updatedAt: Date.now(),
     });
 
-    res.send('ok');
+    res.send(Response.success(null));
 });
 
 router.post('/updatePostInEntry', async function (req, res, next) {
     const wallEntryId = req.body.wallEntryId;
-    console.assert(wallEntryId, 'wallEntryId is required');
     const postId = req.body.postId;
-    console.assert(postId, 'postId is required');
     const postContent = req.body.content;
+    console.assert(wallEntryId, 'wallEntryId is required');
+    console.assert(postId, 'postId is required');
     console.assert(postContent, 'postContent is required');
 
     // Cannot update a post that is not in the entry
     const entry = WallEntryModel.findById(wallEntryId);
     console.assert(entry, 'entry not found');
     if (!entry.posts.includes(postId)) {
-        res.status(400).send('Cannot update a post that is not in the entry');
+        res.status(400).send(Response.error(400, 'Cannot update a post that is not in the entry'));
         return;
     }
 
@@ -180,7 +183,7 @@ router.post('/updatePostInEntry', async function (req, res, next) {
         updatedAt: Date.now(),
     });
 
-    res.send(updatedPost);
+    res.send(Response.success(updatedPost));
 });
 
 module.exports = router;
