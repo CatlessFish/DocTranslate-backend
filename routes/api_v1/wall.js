@@ -11,9 +11,14 @@ const PostModel = require('../../db/models').Post;
 // TODO: Validate request parameters before doing any database queries
 // console.assert does not stop the execution of the program
 
+// TODO: Add ownership validation to modify operations
+
+// TODO: Wrap all database operations in try-catch blocks
+
 
 // Operations on the wall entry list:
 // - Get all wall entries
+// TODO: Get wall entries by page
 // - Create a new wall entry
 // - Delete a wall entry
 
@@ -165,7 +170,7 @@ router.post('/updatePostInEntry', async function (req, res, next) {
     console.assert(postContent, 'postContent is required');
 
     // Cannot update a post that is not in the entry
-    const entry = WallEntryModel.findById(wallEntryId);
+    const entry = await WallEntryModel.findById(wallEntryId);
     console.assert(entry, 'entry not found');
     if (!entry.posts.includes(postId)) {
         res.status(400).send(Response.error(400, 'Cannot update a post that is not in the entry'));

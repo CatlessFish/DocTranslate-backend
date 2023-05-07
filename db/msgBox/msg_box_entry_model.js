@@ -9,7 +9,7 @@ const MsgBoxEntrySchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
-    msgOwner: {
+    entryOwner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
@@ -22,7 +22,7 @@ const MsgBoxEntrySchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-    public: {
+    private: {
         type: Boolean,
         default: false,
     },

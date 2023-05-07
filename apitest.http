@@ -93,3 +93,72 @@ Authorization: Bearer {{token}}
     "wallEntryId":"{{wallEntryId}}",
     "postId":""
 }
+
+####################
+### MsgBox
+####################
+
+### New MsgBox
+POST {{url}}/api/msgBox/createOneMsgBox
+Authorization: Bearer {{token}}
+{{json}}
+
+{
+    "content":{
+        "description":"New MsgBox!"
+    }
+}
+
+### Get MsgBox by Owner Id
+@OwnerId = 6440adf4d3e8741e1c2736f4
+GET {{url}}/api/msgBox/getMsgBoxByOwnerId?ownerId={{OwnerId}}
+Authorization: Bearer {{token}}
+
+### Get MsgBox by Id
+@MsgBoxId = 64571ec26bcd9f33ce4b73ca
+GET {{url}}/api/msgBox/getMsgBoxById?msgBoxId={{MsgBoxId}}
+Authorization: Bearer {{token}}
+
+### Update MsgBox
+POST {{url}}/api/msgBox/updateOneMsgBox
+Authorization: Bearer {{token}}
+{{json}}
+
+{
+    "msgBoxId":"{{MsgBoxId}}",
+    "content":{
+        "description":"New MsgBox!"
+    }
+}
+
+### Create new Entry in MsgBox
+POST {{url}}/api/msgBox/createOneEntryInMsgBox
+Authorization: Bearer {{token}}
+{{json}}
+
+{
+    "msgBoxId":"{{MsgBoxId}}",
+    "content":{
+        "text":"New Entry!"
+    }
+}
+
+### Get all Entry in MsgBox
+GET {{url}}/api/msgBox/getAllEntriesInMsgBox?msgBoxId={{MsgBoxId}}
+Authorization: Bearer {{token}}
+
+### Delete Entry in MsgBox
+POST {{url}}/api/msgBox/deleteOneEntryInMsgBox
+Authorization: Bearer {{token}}
+{{json}}
+
+{
+    "msgBoxId":"{{MsgBoxId}}",
+    "entryId":"64572d8009b8e6b71eb36c67"
+}
+
+### Get all Post in Entry
+@EntryId = 645740e675c43677313bf8dc
+GET {{url}}/api/msgBox/getAllPostsInMsgBoxEntry?entryId={{EntryId}}
+Authorization: Bearer {{token}}
+

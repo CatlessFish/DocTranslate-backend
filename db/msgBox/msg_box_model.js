@@ -14,7 +14,7 @@ const MsgBoxSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-    description: {
+    content: {
         type: Object,
         // 文字，背景图片，...
     },

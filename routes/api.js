@@ -12,5 +12,6 @@ router.get('/', function (req, res, next) {
 
 router.use('/user', require('./api_v1/user'));
 router.use('/wall', auth, require('./api_v1/wall'));
+router.use('/msgBox', auth, require('./api_v1/msgBox'));
 
 module.exports = router;
