@@ -12,19 +12,34 @@ const MsgBoxEntryModel = require('../../db/models').MsgBoxEntry;
 
 // TO-DOs:
 // TODO: Add transaction to ensure the atomicity of the database operations
-
-// Operations on MsgBox:
-// - Get my MsgBox(Each user has only one MsgBox)
-// - Create a new MsgBox
-// - Update a MsgBox
-// - Delete a MsgBox
+// TODO: 为Handler加上参数注解
+// TODO: Export Handlers to reuse them in test api
 
 const MsgBoxOwnershipValidation = async function (req, res, next) {
-    // TODO
-    next();
+    try {
+        const msgBoxId = req.body.msgBoxId;
+        const userId = req.user._id;
+        AssertParam('msgBoxId', msgBoxId, 'string');
+        AssertParam('userId', userId, 'object');
+
+        const msgBox = await MsgBoxModel.findById(msgBoxId);
+        if (!msgBox) {
+            throw new RequestError(-1, 'MsgBox not found');
+        }
+        if (!msgBox.owner.equals(userId)) {
+            throw new RequestError(-1, 'You have no permission to operate on this MsgBox');
+        }
+        next();
+    } catch (e) {
+        if (e instanceof RequestError) {
+            handleRequestError(req, res, e);
+        } else {
+            handleInternalError(req, res, e);
+        }
+    }
 };
 
-router.get('/getMsgBoxByOwnerId', async function (req, res, next) {
+const getMsgBoxByOwnerIdHandler = async function (req, res, next) {
     try {
         const ownerId = req.query.ownerId;
         AssertParam('ownerId', ownerId, 'string');
@@ -39,9 +54,9 @@ router.get('/getMsgBoxByOwnerId', async function (req, res, next) {
             handleInternalError(req, res, e);
         }
     }
-});
+}
 
-router.get('/getMsgBoxById', async function (req, res, next) {
+const getMsgBoxByIdHandler = async function (req, res, next) {
     try {
         const msgBoxId = req.query.msgBoxId;
         AssertParam('msgBoxId', msgBoxId, 'string');
@@ -56,9 +71,9 @@ router.get('/getMsgBoxById', async function (req, res, next) {
             handleInternalError(req, res, e);
         }
     }
-});
+}
 
-router.post('/createOneMsgBox', async function (req, res, next) {
+const createOneMsgBoxHandler = async function (req, res, next) {
     try {
         const ownerId = req.user._id;
         const content = req.body.content;
@@ -85,9 +100,9 @@ router.post('/createOneMsgBox', async function (req, res, next) {
             handleInternalError(req, res, e);
         }
     }
-});
+}
 
-router.post('/updateOneMsgBox', MsgBoxOwnershipValidation, async function (req, res, next) {
+const updateOneMsgBoxHandler = async function (req, res, next) {
     try {
         const msgBoxId = req.body.msgBoxId;
         const content = req.body.content;
@@ -110,11 +125,9 @@ router.post('/updateOneMsgBox', MsgBoxOwnershipValidation, async function (req, 
             handleInternalError(req, res, e);
         }
     }
-});
+}
 
-// NOT TESTED
-// Don't use this API unless you know what you are doing
-router.post('/deleteMsgBoxById', MsgBoxOwnershipValidation, async function (req, res, next) {
+const deleteOneMsgBoxHandler = async function (req, res, next) {
     try {
         const msgBoxId = req.body.msgBoxId;
         AssertParam('msgBoxId', msgBoxId, 'string');
@@ -139,17 +152,9 @@ router.post('/deleteMsgBoxById', MsgBoxOwnershipValidation, async function (req,
             handleInternalError(req, res, e);
         }
     }
-});
+}
 
-
-// Operations on MsgBoxEntry:
-// - Get all MsgBoxEntry
-// TODO: Get MsgBoxEntry by page
-// - Create a new MsgBoxEntry
-// - Delete a MsgBoxEntry
-// TODO: Change the visibility of a MsgBoxEntry
-
-router.get('/getAllEntriesInMsgBox', async function (req, res, next) {
+const getAllEntriesInMsgBoxHandler = async function (req, res, next) {
     try {
         const msgBoxId = req.query.msgBoxId;
         const userId = req.user._id;
@@ -173,9 +178,9 @@ router.get('/getAllEntriesInMsgBox', async function (req, res, next) {
             handleInternalError(req, res, e);
         }
     }
-});
+}
 
-router.post('/createOneEntryInMsgBox', async function (req, res, next) {
+const createOneEntryInMsgBoxHandler = async function (req, res, next) {
     // 可以给自己提问吗？
     try {
         const msgBoxId = req.body.msgBoxId;
@@ -227,9 +232,9 @@ router.post('/createOneEntryInMsgBox', async function (req, res, next) {
             handleInternalError(req, res, e);
         }
     }
-});
+}
 
-router.post('/deleteOneEntryInMsgBox', async function (req, res, next) {
+const deleteOneEntryInMsgBoxHandler = async function (req, res, next) {
     try {
         const msgBoxId = req.body.msgBoxId;
         const entryId = req.body.entryId;
@@ -268,15 +273,7 @@ router.post('/deleteOneEntryInMsgBox', async function (req, res, next) {
             handleInternalError(req, res, e);
         }
     }
-});
-
-
-// Operations on the post list in a MsgBoxEntry:
-// - Get all posts in a MsgBoxEntry
-// TODO: Get posts in a MsgBoxEntry by page
-// - Create a new post in a MsgBoxEntry
-// - Delete a post in a MsgBoxEntry
-// - Update a post in a MsgBoxEntry
+}
 
 const MsgBoxEntryOwnershipValidation = async function (req, res, next) {
     // 检查用户是否有权限对该 MsgBoxEntry 进行操作
@@ -302,7 +299,7 @@ const MsgBoxEntryOwnershipValidation = async function (req, res, next) {
     }
 };
 
-router.get('/getAllPostsInMsgBoxEntry', async function (req, res, next) {
+const getAllPostsInMsgBoxEntryHandler = async function (req, res, next) {
     try {
         const entryId = req.query.entryId;
         const userId = req.user._id;
@@ -326,9 +323,9 @@ router.get('/getAllPostsInMsgBoxEntry', async function (req, res, next) {
             handleInternalError(req, res, e);
         }
     }
-});
+}
 
-router.post('/createOnePostInMsgBoxEntry', MsgBoxEntryOwnershipValidation, async function (req, res, next) {
+const createOnePostInMsgBoxEntryHandler = async function (req, res, next) {
     try {
         const entryId = req.body.entryId;
         const content = req.body.content;
@@ -369,9 +366,9 @@ router.post('/createOnePostInMsgBoxEntry', MsgBoxEntryOwnershipValidation, async
             handleInternalError(req, res, e);
         }
     }
-});
+}
 
-router.post('/deleteOnePostInMsgBoxEntry', MsgBoxEntryOwnershipValidation, async function (req, res, next) {
+const deleteOnePostInMsgBoxEntryHandler = async function (req, res, next) {
     try {
         const entryId = req.body.entryId;
         const postId = req.body.postId;
@@ -409,9 +406,9 @@ router.post('/deleteOnePostInMsgBoxEntry', MsgBoxEntryOwnershipValidation, async
             handleInternalError(req, res, e);
         }
     }
-});
+}
 
-router.post('/updateOnePostInMsgBoxEntry', MsgBoxEntryOwnershipValidation, async function (req, res, next) {
+const updateOnePostInMsgBoxEntryHandler = async function (req, res, next) {
     try {
         const entryId = req.body.entryId;
         const postId = req.body.postId;
@@ -447,6 +444,47 @@ router.post('/updateOnePostInMsgBoxEntry', MsgBoxEntryOwnershipValidation, async
             handleInternalError(req, res, e);
         }
     }
-});
+}
+
+
+// Operations on MsgBox:
+// - Get my MsgBox(Each user has only one MsgBox)
+// - Create a new MsgBox
+// - Update a MsgBox
+// - Delete a MsgBox
+
+
+router.get('/getMsgBoxByOwnerId', getMsgBoxByOwnerIdHandler);
+router.get('/getMsgBoxById', getMsgBoxByIdHandler);
+router.post('/createOneMsgBox', createOneMsgBoxHandler);
+router.post('/updateOneMsgBox', MsgBoxOwnershipValidation, updateOneMsgBoxHandler);
+// NOT TESTED
+// Don't use this API unless you know what you are doing
+router.post('/deleteMsgBoxById', MsgBoxOwnershipValidation, deleteOneMsgBoxHandler);
+
+
+// Operations on MsgBoxEntry:
+// - Get all MsgBoxEntry
+// TODO: Get MsgBoxEntry by page
+// - Create a new MsgBoxEntry
+// - Delete a MsgBoxEntry
+// TODO: Change the visibility of a MsgBoxEntry
+
+router.get('/getAllEntriesInMsgBox', getAllEntriesInMsgBoxHandler);
+router.post('/createOneEntryInMsgBox', createOneEntryInMsgBoxHandler);
+router.post('/deleteOneEntryInMsgBox', deleteOneEntryInMsgBoxHandler);
+
+
+// Operations on the post list in a MsgBoxEntry:
+// - Get all posts in a MsgBoxEntry
+// TODO: Get posts in a MsgBoxEntry by page
+// - Create a new post in a MsgBoxEntry
+// - Delete a post in a MsgBoxEntry
+// - Update a post in a MsgBoxEntry
+
+router.get('/getAllPostsInMsgBoxEntry', getAllPostsInMsgBoxEntryHandler);
+router.post('/createOnePostInMsgBoxEntry', MsgBoxEntryOwnershipValidation, createOnePostInMsgBoxEntryHandler);
+router.post('/deleteOnePostInMsgBoxEntry', MsgBoxEntryOwnershipValidation, deleteOnePostInMsgBoxEntryHandler);
+router.post('/updateOnePostInMsgBoxEntry', MsgBoxEntryOwnershipValidation, updateOnePostInMsgBoxEntryHandler);
 
 module.exports = router;
