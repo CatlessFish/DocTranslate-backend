@@ -162,3 +162,8 @@ Authorization: Bearer {{token}}
 GET {{url}}/api/msgBox/getAllPostsInMsgBoxEntry?entryId={{EntryId}}
 Authorization: Bearer {{token}}
 
+
+### Get a post by Id
+@PostId = 644921c74edf5dd17475bbe1
+GET {{url}}/api/post/getOnePostById?postId={{PostId}}
+Authorization: Bearer {{token}}

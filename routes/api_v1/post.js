@@ -10,8 +10,8 @@ const PostModel = require('../../db/models').Post;
 
 
 const getOnePostByIdHandler = async function (req, res, next) {
-    const postId = req.params.postId;
-    AssertParam.assertId(postId);
+    const postId = req.query.postId;
+    AssertParam('postId', postId, 'string');
 
     try {
         const post = await PostModel.findById(postId);
@@ -29,6 +29,6 @@ const getOnePostByIdHandler = async function (req, res, next) {
     }
 }
 
-router.get('/getOnePostById/:postId', getOnePostByIdHandler);
+router.get('/getOnePostById', getOnePostByIdHandler);
 
 module.exports = router;

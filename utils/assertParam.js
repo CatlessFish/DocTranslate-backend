@@ -1,4 +1,4 @@
-const RequestError = require('./requestError');
+const { RequestError } = require('./requestError');
 
 /*
  * This function is used to assert the type of a parameter in a coming request.
