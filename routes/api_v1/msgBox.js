@@ -190,6 +190,8 @@ const createOneEntryInMsgBoxHandler = async function (req, res, next) {
         AssertParam('PostContent', content, 'object');
         AssertParam('userId', userId, 'object');
 
+        const msgBox = await MsgBoxModel.findById(msgBoxId);
+
         const newPost = await PostModel.create({
             owner: userId,
             createdAt: Date.now(),
@@ -218,7 +220,6 @@ const createOneEntryInMsgBoxHandler = async function (req, res, next) {
         };
         await newPost.save();
 
-        const msgBox = await MsgBoxModel.findById(msgBoxId);
         msgBox.entries.push(newEntry._id);
         msgBox.updatedAt = Date.now();
         await msgBox.save();
