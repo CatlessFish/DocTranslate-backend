@@ -379,6 +379,8 @@ const deleteOnePostInMsgBoxEntryHandler = async function (req, res, next) {
         AssertParam('userId', userId, 'object');
 
         const entry = await MsgBoxEntryModel.findById(entryId);
+        const post = await PostModel.findById(postId);
+
         // Cannot delete the initial post
         if (entry.initialPost.equals(postId)) {
             throw new RequestError(-1, 'Cannot delete the initial post');
@@ -391,8 +393,8 @@ const deleteOnePostInMsgBoxEntryHandler = async function (req, res, next) {
             throw new RequestError(-1, 'You have no permission to delete this post');
         }
 
-        await PostModel.findByIdAndRemove(postId);
-        await MsgBoxEntryModel.findByIdAndUpdate(entryId, {
+        await post.deleteOne();
+        await entry.updateOne(entryId, {
             $pull: {
                 posts: postId,
             },
@@ -424,7 +426,8 @@ const updateOnePostInMsgBoxEntryHandler = async function (req, res, next) {
         if (!userId.equals(post.owner)) {
             throw new RequestError(-1, 'You have no permission to update this post');
         }
-        if (post.entryAt.type !== 'MsgBoxEntry' || !post.entryAt.id.equals(entryId)) {
+        if (post.entryAt.type !== 'MsgBoxEntry'
+            || toString(post.entryAt.id) != toString(entryId)) {
             throw new RequestError(-1, 'The post does not belong to the MsgBoxEntry');
         }
 
