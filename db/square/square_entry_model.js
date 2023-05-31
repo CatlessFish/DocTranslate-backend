@@ -10,6 +10,10 @@ const SquareEntrySchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    updatedAt: {
+        type: Date,
+        default: Date.now,
+    },
     msgBoxId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'MsgBox',

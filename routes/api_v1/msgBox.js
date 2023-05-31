@@ -30,6 +30,7 @@ const MsgBoxOwnershipValidation = async function (req, res, next) {
             throw new RequestError(-1, 'You have no permission to operate on this MsgBox');
         }
         next();
+
     } catch (e) {
         if (e instanceof RequestError) {
             handleRequestError(req, res, e);
