@@ -96,4 +96,34 @@ router.post('/deleteOne', async function (req, res, next) {
     }
 });
 
+router.post('/deleteOneByMsgBoxId', async function (req, res, next) {
+    try {
+        const { msgBoxId } = req.body;
+        const userId = req.user._id;
+        AssertParam('msgBoxId', msgBoxId, 'string');
+        AssertParam('userId', userId, 'object');
+
+        const squareEntry = await SquareEntry.findOne({ msgBoxId });
+        if (!squareEntry) {
+            throw new RequestError(`msgBoxId ${msgBoxId} does not exist`);
+        }
+
+        // check if the user is the owner of the squareEntry
+        if (!squareEntry.owner.equals(userId)) {
+            throw new RequestError(`user ${userId} is not the owner of squareEntry ${squareEntry._id}`);
+        }
+
+        await squareEntry.deleteOne();
+        res.send(Response.success());
+
+    }
+    catch (e) {
+        if (e instanceof RequestError) {
+            handleRequestError(req, res, e);
+        } else {
+            handleInternalError(req, res, e);
+        }
+    }
+});
+
 module.exports = router;
