@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node --inspect ./bin/www",
+    "start": "node ./bin/www",
     "dev": "nodemon -L --exec node --inspect ./bin/www"
   },
   "dependencies": {

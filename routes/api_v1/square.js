@@ -26,7 +26,7 @@ router.get('/getAll', async function (req, res, next) {
 router.post('/addOne', async function (req, res, next) {
     try {
         const { owner, msgBoxId } = req.body;
-        const { userId } = req.user._id;
+        const userId = req.user._id;
         AssertParam('owner', owner, 'string');
         AssertParam('msgBoxId', msgBoxId, 'string');
         AssertParam('userId', userId, 'object');
