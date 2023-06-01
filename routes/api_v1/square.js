@@ -10,7 +10,7 @@ const { SquareEntry, MsgBox } = require('../../db/models');
 
 router.get('/getAll', async function (req, res, next) {
     try {
-        const squareEntries = await SquareEntry.find();
+        const squareEntries = await SquareEntry.find().sort({ updatedAt: -1 });
         res.send(Response.success(squareEntries));
     }
 
