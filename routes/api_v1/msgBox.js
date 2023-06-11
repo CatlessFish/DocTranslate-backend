@@ -186,9 +186,11 @@ const createOneEntryInMsgBoxHandler = async function (req, res, next) {
     try {
         const msgBoxId = req.body.msgBoxId;
         const content = req.body.content; // post content
+        const isPrivate = req.body.isPrivate || false;
         const userId = req.user._id;
         AssertParam('msgBoxId', msgBoxId, 'string');
         AssertParam('PostContent', content, 'object');
+        AssertParam('isPrivate', isPrivate, 'boolean');
         AssertParam('userId', userId, 'object');
 
         const msgBox = await MsgBoxModel.findById(msgBoxId);
@@ -197,7 +199,7 @@ const createOneEntryInMsgBoxHandler = async function (req, res, next) {
             owner: userId,
             createdAt: Date.now(),
             updatedAt: Date.now(),
-            private: true,
+            private: isPrivate,
             visibleTo: [
                 userId,
                 msgBox.owner,
@@ -210,7 +212,7 @@ const createOneEntryInMsgBoxHandler = async function (req, res, next) {
             entryOwner: userId,
             createdAt: Date.now(),
             updatedAt: Date.now(),
-            private: true,
+            private: isPrivate,
             initialPost: newPost._id,
             posts: [newPost._id],
         });
