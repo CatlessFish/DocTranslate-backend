@@ -5,7 +5,11 @@ const jwt = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
 const { User } = require('../../db/models')
 const { JWT_SECRET } = require('../../config');
+
 const Response = require('../../utils/generalResponse');
+const AssertParam = require('../../utils/assertParam');
+const { handleInternalError } = require('../../utils/internalError');
+const { RequestError, handleRequestError } = require('../../utils/requestError');
 
 router.get('/getAll', async function (req, res, next) {
     const users = await User.find();
@@ -53,10 +57,40 @@ router.post('/register', async function (req, res, next) {
 });
 
 const auth = require('../../middleware/auth');
+const { isValidObjectId } = require('mongoose');
 
 router.get('/profile', auth, async function (req, res, next) {
     // console.log('profile', req.user);
     res.send(Response.success(req.user));
+});
+
+router.get('/getUserById', auth, async function (req, res, next) {
+    try {
+        const { userId } = req.query;
+        AssertParam('userId', userId, 'string')
+        if (!isValidObjectId(userId)) {
+            throw new RequestError(-1, 'Invalid userId');
+        }
+
+        const targetUser = await User.findById(userId);
+        if (!targetUser) {
+            throw new RequestError(-1, 'User not found');
+        }
+
+        const responseUserInfo = {
+            _id: targetUser._id,
+            username: targetUser.username,
+            email: targetUser.email,
+        }
+        res.send(Response.success(responseUserInfo));
+
+    } catch (e) {
+        if (e instanceof RequestError) {
+            handleRequestError(req, res, e);
+        } else {
+            handleInternalError(req, res, e);
+        }
+    }
 });
 
 module.exports = router;
