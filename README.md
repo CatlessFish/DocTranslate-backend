@@ -1,18 +1,4 @@
-# Crispy Coconut Backend
-
-## 项目介绍
-
-这是Crispy Coconut项目的后端服务代码仓库。
-
-> Crispy Coconut是一款匿名提问箱App，该项目为2023年@CatlessFish与@Row11n二人合作完成的春季复旦大学移动互联网课程项目。
->
-> 前端App代码仓库：[CatlessFish/crispy-coconut (github.com)](https://github.com/CatlessFish/crispy-coconut)
->
-> 验收测试API规范：[zyz9740/ApiDoc (github.com)](https://github.com/zyz9740/ApiDoc)
->
-> 实际使用API文档：[CatlessFish/CocoApiDoc: API documentation for CrispyCoconut (github.com)](https://github.com/CatlessFish/CocoApiDoc)
-
-
+# DocTranslate backend
 
 ## 食用指南
 
