@@ -155,7 +155,7 @@ const textTrunc = (text) => {
     return result;
 }
 
-const getTranslation = async (usertext) => {
+const getTranslation_v1_PRE = async (usertext) => {
     const chunks = textTrunc(usertext);
     const constructedMessagesChunks = constructPrompt(chunks);
     // For performance Analysis
@@ -256,7 +256,7 @@ const getTranslation = async (usertext) => {
     }
     systemLog(logMessage);
 
-    return result;
+    return { text: result, ...logMessage };
 }
 
-module.exports = getTranslation;
+module.exports = getTranslation_v1_PRE;
