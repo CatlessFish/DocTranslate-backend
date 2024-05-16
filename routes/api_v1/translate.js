@@ -9,7 +9,8 @@ const Response = require('../../utils/generalResponse');
 const AssertParam = require('../../utils/assertParam');
 const { handleInternalError } = require('../../utils/internalError');
 const { RequestError, handleRequestError } = require('../../utils/requestError');
-const getTranslation = require('../../functions/translate');
+const getTranslation = require('../../functions/translate_v1');
+// const getTranslation = require('../../functions/translate');
 
 router.post('/', async function (req, res, next) {
     const { text } = req.body;
