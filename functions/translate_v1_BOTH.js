@@ -4,6 +4,7 @@ const { getChatCompletion, getChatCompletionStream } = require('./api');
 // import { encode, isWithinTokenLimit } from 'gpt-tokenizer';
 const { encode, isWithinTokenLimit, encodeChat } = require('gpt-tokenizer');
 const { systemLog, fileAsConsole } = require('../utils/systemLog');
+const { default_config } = require('./configuration');
 // const fileAsConsole = console;
 
 const _defaultSystemMessage = `\
@@ -14,19 +15,19 @@ You are a English-Chinese Translator. Follow all the given instructions and cons
 const init_prompt = `\
 Step 1: Translate. The English text given by USER is called "CURR_EN", it consists one or several segments.\
 Each segment is formatted as "{{SEGMENT_NUMBER}}{text_to_translate}".\
-Translate every segment, do not omit any segments. And for each segment, you should translate all the text after the line number.\
+Translate every segment into Simplified Chinese, do not omit any segments. And for each segment, you should translate all the text after the line number.\
 Generate an empty translation for a segment if the text in it is empty.\
 Step 2: Summarize. You should summarize the information in your translation and form a CONTEXT,\
 for the following tasks to reference. The context should not exceeds 500 tokens.\
 `
 
 const following_prompt = `\
-Step 1: Translate. In this task, there will be a piece of text given by USER, named "CURR_EN", \
-and another piece of text given by SYSTEM named "CONTEXT"
-"CONTEXT" contains some context and background knowledge with respect to CURR_EN.\
-You need to translate the text in "CURR_EN" into Chinese, considering the context in "CONTEXT".\
+Task: Translate. In this task, there will be a piece of text given by USER, named "CURR_EN", a piece of text named "PREV_EN", \
+and another piece of text given by USER named "CONTEXT"
+"PREV_EN" and "CONTEXT" contains some context and background knowledge with respect to CURR_EN.\
+You need to translate the text in "CURR_EN" into Simplified Chinese, considering the context in "CONTEXT" and "PREV_EN".\
 "CURR_EN" consists one or several segments. Each segment is formatted as "{{SEGMENT_NUMBER}}{text_to_translate}".\
-Translate every segment between the START and END of CURR_EN, do not omit any segments. And for each segment, you should translate all the text after the line number.\
+Requirements: Translate every segment between the START and END of CURR_EN, do not omit any segments. And for each segment, you should translate all the text after the line number.\
 Generate an empty translation for a segment if the text in it is empty.\
 Do not translate the text in "CONTEXT".
 `
@@ -35,27 +36,23 @@ const init_format_prompt = `\
 The translation result should be a list of translated segments of text.\
 The length of the list must equal to the number of segments given in CURR_EN.\
 Return in JSON, which has the structure as \
-{"seg_num":the number of segments given in "CURR_EN", "text":[a list of the tranlated segments], "context":the summarized context}.\
-Do not add any other things into the result.\
+{"seg_num":the number of segments given in "CURR_EN", "text":[a list of the text of tranlated segments], "context":the summarized context}.\
+The list of texts should not contain the line number. Do not add any other things into the result.\
 `
 
 const following_format_prompt = `\
 The translation result should be a list of translated segments of text.\
 The length of the list must equal to the number of segments given in CURR_EN.\
 Return in JSON, which has the structure as \
-{"seg_num":the number of segments given in "CURR_EN", "text":[a list of the tranlated segments]}.\
-Do not add any other things into the result.\
+{"seg_num":the number of segments given in "CURR_EN", "text":[a list of the text of tranlated segments]}.\
+The list of texts should not contain the line number. Do not add any other things into the result.\
 `
 
 const context_update_prompt = `\
-You will be given a piece of text by the USER named "CONTEXT" and another piece of text named "USERTEXT".\
-Each piece of text is wrapped between an "BEGIN" and "END" pair. Follow the instructions below, do it step by step.
-Step 1: Compress. In this step, compress the original context to no more than 400 tokens.\
-Step 2: Summarize. Generate a piece of abstract of the given text USERTEXT, the length of the abstract should be under 100 tokens.\
-Step 3: Update. Now generate an updated context, do this by adding the compressed context and the abstract together.\
-The updated context should not exceeds 500 tokens in total.\
-You should return the updated context in JSON format. The JSON should have a structure like:\
-"{"context":the updated context}" Do not add any other things in the result.
+Summarize the information in the given text and generate an abstract.\
+The length of the abstract should be less than 300 words.
+You should return in JSON format. The JSON should have a structure like:\
+"{"context":the abstract}" Do not add any other things in the result.
 `
 
 const constructPrompt = (chunkedUserText, dict = {}, prompts = []) => {
@@ -104,18 +101,21 @@ const doContextAdjust = async (translation, ctx) => {
     // context: string
     const messages = [];
     messages.push({ 'role': 'system', 'content': context_update_prompt });
-    messages.push({ 'role': 'user', 'content': '\n===BEGIN OF CONTEXT===\n' + ctx + '\n===END OF CONTEXT===\n' });
-    messages.push({ 'role': 'user', 'content': '\n===BEGIN OF USERTEXT===\n' });
-    translation.forEach((line, idx) => {
-        messages.push({ 'role': 'user', 'content': `USERTEXT:\n${idx}\n` + line });
-    });
-    messages.push({ 'role': 'user', 'content': '\n===END OF USERTEXT===\n' });
+    messages.push({ 'role': 'user', 'content': ctx + '\n' + translation.join('\n') });
     fileAsConsole.debug(`Adjusting context, text with ${translation.length} lines, ctx with ${encode(ctx).length} tokens.`);
-    const res = await getChatCompletion(messages);
+    const res = await getChatCompletion(
+        messages,
+        config = {
+            ...default_config,
+            max_tokens: 600,
+        },
+    );
+    const pTok = res.usage?.prompt_tokens || 0;
+    const cTok = res.usage?.completion_tokens || 0;
     const rawJson = JSON.parse(res.choices[0].message.content);
-    fileAsConsole.debug('Context Result:', rawJson);
     const { context } = rawJson;
-    return context;
+    fileAsConsole.debug(`New context (${encode(context).length} tokens):`, rawJson);
+    return { context, pTok, cTok };
 }
 
 // Truncate long text into smaller pieces
@@ -172,7 +172,8 @@ const getTranslation_v1_BOTH = async (usertext) => {
 
             // Insert Context
             if (i != 0) {
-                messages.push({ 'role': 'system', 'content': '\n===BEGIN OF CONTEXT===\n' + curr_ctx + '\n===END OF CONTEXT===\n' });
+                // restrict length
+                messages.push({ 'role': 'user', 'content': '\n===BEGIN OF CONTEXT===\n' + curr_ctx + '\n===END OF CONTEXT===\n' });
             };
 
             // Limit messages token
@@ -210,13 +211,22 @@ const getTranslation_v1_BOTH = async (usertext) => {
                 let { seg_num, context } = rawJson;
                 _text = rawJson.text;
                 fileAsConsole.debug(`Message Chunk [${i}] got response, seg_num=${seg_num}, line_num=${_text.length}`,);
-                if (_text.length == 0) { fileAsConsole.error('text length = 0.\nRetrying...'); continue; }
+                fileAsConsole.debug('TEXT:', _text);
+                if (_text.length == 0 || seg_num > _text.length || (_text.length - seg_num > 3)) {
+                    fileAsConsole.error('text length error.\nRetrying...');
+                    continue;
+                }
 
                 if (i == 0) {
                     curr_ctx = context;
                 } else {
-                    curr_ctx = doContextAdjust(_text, curr_ctx);
+                    // Parallize?
+                    const adjust_result = await doContextAdjust(_text, curr_ctx);
+                    curr_ctx = adjust_result.context
+                    promptTokenCount.push(adjust_result.pTok);
+                    completionTokenCount.push(adjust_result.cTok);
                 }
+                generatedContext.push(curr_ctx);
 
                 break;
             }

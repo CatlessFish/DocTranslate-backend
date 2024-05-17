@@ -15,19 +15,19 @@ You are a English-Chinese Translator. Follow all the given instructions and cons
 const init_prompt = `\
 Step 1: Translate. The English text given by USER is called "CURR_EN", it consists one or several segments.\
 Each segment is formatted as "{{SEGMENT_NUMBER}}{text_to_translate}".\
-Translate every segment, do not omit any segments. And for each segment, you should translate all the text after the line number.\
+Translate every segment into Simplified Chinese, do not omit any segments. And for each segment, you should translate all the text after the line number.\
 Generate an empty translation for a segment if the text in it is empty.\
 Step 2: Summarize. You should summarize the information in your translation and form a CONTEXT,\
 for the following tasks to reference. The context should not exceeds 500 tokens.\
 `
 
 const following_prompt = `\
-Step 1: Translate. In this task, there will be a piece of text given by USER, named "CURR_EN", \
+Task: Translate. In this task, there will be a piece of text given by USER, named "CURR_EN", a piece of text named "PREV_EN", \
 and another piece of text given by USER named "CONTEXT"
-"CONTEXT" contains some context and background knowledge with respect to CURR_EN.\
-You need to translate the text in "CURR_EN" into Chinese, considering the context in "CONTEXT".\
+"PREV_EN" and "CONTEXT" contains some context and background knowledge with respect to CURR_EN.\
+You need to translate the text in "CURR_EN" into Simplified Chinese, considering the context in "CONTEXT" and "PREV_EN".\
 "CURR_EN" consists one or several segments. Each segment is formatted as "{{SEGMENT_NUMBER}}{text_to_translate}".\
-Translate every segment between the START and END of CURR_EN, do not omit any segments. And for each segment, you should translate all the text after the line number.\
+Requirements: Translate every segment between the START and END of CURR_EN, do not omit any segments. And for each segment, you should translate all the text after the line number.\
 Generate an empty translation for a segment if the text in it is empty.\
 Do not translate the text in "CONTEXT".
 `
@@ -75,6 +75,9 @@ const constructPrompt = (chunkedUserText, dict = {}, prompts = []) => {
             messages.push({ 'role': 'system', 'content': prompt.content });
         });
 
+        if (idx != 0) {
+            messages.push({ 'role': 'system', 'content': 'PREV_EN:\n' + chunkedUserText[idx - 1] });
+        }
         // Text to translate
         const usertext_with_lines = usertext.split('\n');
         // const usertext_with_lines = usertext;
@@ -120,9 +123,8 @@ const textTrunc = (text) => {
     // text: string
 
     let result = [];
-    const tokenLimit = 1500; // gpt-3.5-turbo supports maximum 4096 tokens in completion
-    const lineLimit = 20;
-    const MAX_SEGMENT_LENGTH = 1600;
+    const tokenLimit = 2000; // gpt-3.5-turbo supports maximum 4096 tokens in completion
+    const lineLimit = 30;
 
     const segments = text.split('\n\n').filter((value) => value);
     segments.forEach((segment) => {
@@ -131,7 +133,6 @@ const textTrunc = (text) => {
         segment.split('\n').forEach((line) => {
             // console.log(`CurrSeg: ${encode(curr_seg).length} tokens, line: ${encode(line).length} tokens.`)
             if (linecount < lineLimit && isWithinTokenLimit(curr_seg + line, tokenLimit)) {
-                // if (curr_seg.length + line.length <= MAX_SEGMENT_LENGTH) {
                 curr_seg += line + '\n';
                 linecount += 1;
             } else {
@@ -148,7 +149,7 @@ const textTrunc = (text) => {
     return result;
 }
 
-const getTranslation_v1_CTX = async (usertext) => {
+const getTranslation_gpt4 = async (usertext) => {
     const chunks = textTrunc(usertext);
     const constructedMessagesChunks = constructPrompt(chunks);
     // For performance Analysis
@@ -274,4 +275,4 @@ const getTranslation_v1_CTX = async (usertext) => {
     return { text: result, ...logMessage };
 }
 
-module.exports = getTranslation_v1_CTX;
+module.exports = getTranslation_gpt4;

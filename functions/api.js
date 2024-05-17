@@ -1,11 +1,13 @@
-const { default_config, default_endpoint, default_model } = require("./configuration");
+// const { default_config, default_endpoint, default_model } = require("./configuration_4");
+const { default_config, default_endpoint, default_model } = require("./configuration_ds");
+// const { default_config, default_endpoint, default_model } = require("./configuration");
 const { API_KEY } = require('../config');
 
 const getChatCompletion = async (
     messages,
+    config = default_config,
     endpoint = default_endpoint,
     model = default_model,
-    config = default_config,
     apiKey = API_KEY,
     customHeaders = {}
 ) => {
@@ -24,9 +26,13 @@ const getChatCompletion = async (
             model,
         }),
     });
-    if (!response.ok) throw new Error(await response.text());
+    if (!response.ok) {
+        // console.log(await response.text());
+        throw new Error(await response.text());
+    };
 
     const data = await response.json();
+    // console.log(response)
     return data;
 };
 
