@@ -49,6 +49,7 @@ router.post('/register', async function (req, res, next) {
             email,
         })
         res.send(Response.success(newUser));
+        // await User.findByIdAndDelete(newUser._id);
     }
     catch (e) {
         res.status(400).send(Response.error(400, e.message));

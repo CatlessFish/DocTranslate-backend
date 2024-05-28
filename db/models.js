@@ -9,6 +9,8 @@ mongoose.connect(MONGO_ADDRESS, {
 // export models here
 const models = {
     User: require('./user/user_model'),
+    Prompt: require('./pref/prompt_model'),
+    Dict: require('./pref/dict_model'),
 };
 
 module.exports = models;

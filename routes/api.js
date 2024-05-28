@@ -11,6 +11,7 @@ router.get('/', function (req, res, next) {
 });
 
 router.use('/user', require('./api_v1/user'));
+router.use('/sync', require('./api_v1/sync'));
 router.use('/translate', require('./api_v1/translate'));
 
 module.exports = router;
