@@ -11,6 +11,7 @@ const models = {
     User: require('./user/user_model'),
     Prompt: require('./pref/prompt_model'),
     Dict: require('./pref/dict_model'),
+    Chat: require('./chat/chat_model'),
 };
 
 module.exports = models;

@@ -3,7 +3,7 @@ var router = express.Router();
 
 const jwt = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
-const { User, Prompt, Dict } = require('../../db/models');
+const { User, Prompt, Dict, Chat } = require('../../db/models');
 const { JWT_SECRET } = require('../../config');
 
 const Response = require('../../utils/generalResponse');
@@ -18,10 +18,32 @@ router.post('/upload', auth, async function (req, res, next) {
     const { syncType, data } = req.body;
     // console.log(req.body);
     const returnData = new Promise(async (resolve, reject) => {
-        switch (syncType) {
+        try {
+            switch (syncType) {
             case 'chat':
-                resolve();
+                    const chat = data.chat;
+                    if (chat) {
+                        const query = Chat.findByIdAndUpdate(
+                            chat.id,
+                            {
+                                ...chat,
+                                owner_id: user._id,
+                            },
+                            {
+                                upsert: true,
+                                new: true,
+                                select: '_id',
+                            }
+                        );
+                        query.then((updated_doc) => {
+                            console.log(updated_doc);
+                            resolve({ updated: updated_doc._id.toString() });
+                        });
+                    } else {
+                        reject('Invalid Param');
+                    }
                 break;
+
             case 'userdict':
                 const dict = data.userdict;
                 if (dict) {
@@ -44,6 +66,7 @@ router.post('/upload', auth, async function (req, res, next) {
                     reject('Invalid Param');
                 }
                 break;
+
             case 'userprompt':
                 const prompts = data.userprompt;
                 if (prompts instanceof Array) {
@@ -77,21 +100,54 @@ router.post('/upload', auth, async function (req, res, next) {
                 // console.log('[upload] Prompts:', prompts);
                 break;
         }
+        } catch (err) {
+            reject(err.message);
+        }
     });
     returnData.then(
         (value) => { res.send(Response.success(value)); },
         (reason) => { res.send(Response.error(400, reason)) },
-    )
+    );
 });
 
 router.post('/download', auth, async function (req, res, next) {
     const user = req.user;
     const { syncType, data } = req.body;
     const returnData = new Promise(async (resolve, reject) => {
-        switch (syncType) {
+        try {
+            switch (syncType) {
             case 'chat':
-                resolve();
+                    // data.ids: The list of chat ids
+                    const chats = (data && data.ids && data.ids instanceof Array) ?
+                        await Chat.find({ owner_id: user._id, _id: { $in: data.ids } })
+                        : await Chat.find({ owner_id: user._id });
+                    if (chats && chats instanceof Array) {
+                        const result_chats = chats.map((chat) => {
+                            const {
+                                user_text, result_text, original_result_text,
+                                user_text_chunks, result_text_chunks, original_result_text_chunks,
+                                user_dict_index,
+                            } = chat.task;
+                            const result_task = {
+                                user_text, result_text, original_result_text,
+                                user_text_chunks, result_text_chunks, original_result_text_chunks,
+                                user_dict_index, message_chunks: [],
+                            };
+                            return {
+                                id: chat._id,
+                                title: chat.title,
+                                messages: [], // Return empty messages
+                                config: {}, // The caller should handle this
+                                titleSet: false, // The caller should handle this
+                                task: result_task,
+                            };
+                        })
+                        resolve(result_chats);
+                    } else {
+                        reject('Chat Not Found');
+                    }
                 break;
+
             case 'userdict':
                 const dict = await Dict.findOne({ owner_id: user._id }, ['_id', 'name', 'entries']);
                 // console.log('dict:', dict);
@@ -111,6 +167,7 @@ router.post('/download', auth, async function (req, res, next) {
                     reject('Dict Not Found');
                 }
                 break;
+
             case 'userprompt':
                 const prompts = await Prompt.find({ owner_id: user._id }, ['_id', 'content']);
                 const result = prompts.map((doc) => {
@@ -121,6 +178,9 @@ router.post('/download', auth, async function (req, res, next) {
                 });
                 resolve({ prompts: result });
                 break;
+        }
+        } catch (err) {
+            reject(err.message);
         }
     });
     returnData.then(
