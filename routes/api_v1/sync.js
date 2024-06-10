@@ -3,7 +3,7 @@ var router = express.Router();
 
 const jwt = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
-const { User, Prompt, Dict, Chat } = require('../../db/models');
+const { User, Prompt, Dict, Chat, Session } = require('../../db/models');
 const { JWT_SECRET } = require('../../config');
 
 const Response = require('../../utils/generalResponse');
@@ -42,7 +42,32 @@ router.post('/upload', auth, async function (req, res, next) {
                     } else {
                         reject('Invalid Param');
                     }
-                break;
+                    break;
+
+                case 'session':
+                    const session = data.session;
+                    if (session) {
+                        delete session.message_chunks;
+                        const query = Session.findByIdAndUpdate(
+                            session.id,
+                            {
+                                ...session,
+                                owner_id: user._id,
+                            },
+                            {
+                                upsert: true,
+                                new: true,
+                                select: '_id',
+                            }
+                        );
+                        query.then((updated_doc) => {
+                            console.log(updated_doc);
+                            resolve({ updated: updated_doc._id.toString() });
+                        });
+                    } else {
+                        reject('Invalid Param');
+                    }
+                    break;
 
             case 'userdict':
                 const dict = data.userdict;
@@ -65,7 +90,7 @@ router.post('/upload', auth, async function (req, res, next) {
                 } else {
                     reject('Invalid Param');
                 }
-                break;
+                    break;
 
             case 'userprompt':
                 const prompts = data.userprompt;
@@ -98,7 +123,7 @@ router.post('/upload', auth, async function (req, res, next) {
                     reject('Invalid Param');
                 }
                 // console.log('[upload] Prompts:', prompts);
-                break;
+                    break;
         }
         } catch (err) {
             reject(err.message);
@@ -147,6 +172,21 @@ router.post('/download', auth, async function (req, res, next) {
                         reject('Chat Not Found');
                     }
                 break;
+
+                case 'session':
+                    const sessions = (data && data.ids && data.ids instanceof Array) ?
+                        await Session.find({ owner_id: user._id, _id: { $in: data.ids } })
+                        : await Session.find({ owner_id: user._id });
+                    if (sessions && sessions instanceof Array) {
+                        const result_sessions = sessions.map((s) => ({
+                            ...s,
+                            message_chunks: [],
+                        }));
+                        resolve(result_sessions);
+                    } else {
+                        reject('Session Not Found');
+                    }
+                    break;
 
             case 'userdict':
                 const dict = await Dict.findOne({ owner_id: user._id }, ['_id', 'name', 'entries']);

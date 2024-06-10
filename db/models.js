@@ -12,6 +12,7 @@ const models = {
     Prompt: require('./pref/prompt_model'),
     Dict: require('./pref/dict_model'),
     Chat: require('./chat/chat_model'),
+    Session: require('./session/session_model'),
 };
 
 module.exports = models;
