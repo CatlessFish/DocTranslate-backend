@@ -179,7 +179,16 @@ router.post('/download', auth, async function (req, res, next) {
                         : await Session.find({ owner_id: user._id });
                     if (sessions && sessions instanceof Array) {
                         const result_sessions = sessions.map((s) => ({
-                            ...s,
+                            id: s._id,
+                            title: s.title,
+                            folder: s.folder,
+                            config: {},
+                            user_text: s.user_text,
+                            user_text_chunks: s.user_text_chunks,
+                            result_text_chunks: s.result_text_chunks,
+                            original_result_text_chunks: s.original_result_text_chunks,
+                            user_dict_index: s.user_dict_index,
+                            user_prompt_set_index: s.user_prompt_set_index,
                             message_chunks: [],
                         }));
                         resolve(result_sessions);
